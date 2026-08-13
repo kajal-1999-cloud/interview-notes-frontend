@@ -14,7 +14,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const API_BASE_URL = 'http://localhost:5000/api';
+// export const API_BASE_URL = 'http://localhost:5000/api';
+export const API_BASE_URL = 'https://interview-prep-backend-59xd.onrender.com//api';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
@@ -24,34 +25,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedToken = localStorage.getItem('admin_token');
     const storedUser = localStorage.getItem('admin_user');
-    
+
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
-      
+
       // Verify token
       fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${storedToken}`
         }
       })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error('Token invalid');
-        }
-        return res.json();
-      })
-      .then(data => {
-        setUser({ username: data.username });
-      })
-      .catch(() => {
-        // Clear invalid token
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_user');
-        setToken(null);
-        setUser(null);
-      })
-      .finally(() => setLoading(false));
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Token invalid');
+          }
+          return res.json();
+        })
+        .then(data => {
+          setUser({ username: data.username });
+        })
+        .catch(() => {
+          // Clear invalid token
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          setToken(null);
+          setUser(null);
+        })
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
-    
+
     // Auto-detect JSON payload and set header if needed
     if (options.body && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
