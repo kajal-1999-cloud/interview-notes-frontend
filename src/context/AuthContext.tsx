@@ -14,8 +14,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// export const API_BASE_URL = 'http://localhost:5000/api';
-export const API_BASE_URL = 'https://interview-prep-backend-59xd.onrender.com/api';
+export const API_BASE_URL = 'http://localhost:5000/api';
+// export const API_BASE_URL = 'https://interview-prep-backend-59xd.onrender.com/api';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);

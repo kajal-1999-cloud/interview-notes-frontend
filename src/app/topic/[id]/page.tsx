@@ -96,6 +96,8 @@ export default function TopicPage() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [deletingQuestionId, setDeletingQuestionId] = useState<string | null>(null);
+  const [deletingCatId, setDeletingCatId] = useState<string | null>(null);
 
   const fetchTopicData = async () => {
     try {
@@ -187,21 +189,24 @@ export default function TopicPage() {
   };
 
   const deleteCategory = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category? Questions under this category will NOT be deleted; they will be reassigned to "Uncategorized".')) return;
-
     try {
       const res = await apiFetch(`/categories/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
+        setDeletingCatId(null);
         if (selectedCategory === id) {
           setSelectedCategory('all');
         }
         fetchTopicData();
         fetchQuestions();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.msg || 'Failed to delete category.');
       }
     } catch (err) {
       console.error(err);
+      alert('Network error. Failed to delete category.');
     }
   };
 
@@ -251,9 +256,13 @@ export default function TopicPage() {
       });
       if (res.ok) {
         setQuestions(questions.map(item => item._id === q._id ? { ...item, important: !q.important } : item));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.msg || 'Failed to update question. Please verify you are logged in.');
       }
     } catch (err) {
       console.error(err);
+      alert('Network error. Failed to update question.');
     }
   };
 
@@ -292,24 +301,31 @@ export default function TopicPage() {
         setEditingQuestionId(null);
         setEditFields(null);
         fetchQuestions();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.msg || 'Failed to save question edits. Please check your credentials.');
       }
     } catch (err) {
       console.error(err);
+      alert('Network error. Failed to save question edits.');
     }
   };
 
   const deleteQuestion = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this question?')) return;
-
     try {
       const res = await apiFetch(`/questions/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
+        setDeletingQuestionId(null);
         fetchQuestions();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.msg || 'Failed to delete question. Please check if you are logged in correctly.');
       }
     } catch (err) {
       console.error(err);
+      alert('Network error. Failed to delete question.');
     }
   };
 
@@ -809,21 +825,42 @@ export default function TopicPage() {
 
                             {/* CRUD buttons */}
                             {isAuthenticated && (
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                  onClick={() => startEditing(q)}
-                                  className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
-                                  title="Edit Question"
-                                >
-                                  <Edit2 size={14} />
-                                </button>
-                                <button
-                                  onClick={() => deleteQuestion(q._id)}
-                                  className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
-                                  title="Delete Question"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
+                              <div className="flex items-center gap-1.5">
+                                {deletingQuestionId === q._id ? (
+                                  <div className="flex items-center gap-2 bg-rose-50 border border-rose-100 rounded-xl px-2.5 py-1 text-xs">
+                                    <span className="font-bold text-rose-700">Delete?</span>
+                                    <button
+                                      onClick={() => deleteQuestion(q._id)}
+                                      className="font-black text-rose-600 hover:text-rose-800 transition-colors"
+                                    >
+                                      Yes
+                                    </button>
+                                    <span className="text-slate-300">|</span>
+                                    <button
+                                      onClick={() => setDeletingQuestionId(null)}
+                                      className="font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => startEditing(q)}
+                                      className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                                      title="Edit Question"
+                                    >
+                                      <Edit2 size={14} />
+                                    </button>
+                                    <button
+                                      onClick={() => setDeletingQuestionId(q._id)}
+                                      className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                                      title="Delete Question"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             )}
                           </div>
@@ -907,24 +944,47 @@ export default function TopicPage() {
                   {categories.map((c) => (
                     <div key={c._id} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg text-xs font-semibold text-slate-700">
                       <span>{c.name}</span>
-                      <div className="flex gap-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingCatId(c._id);
-                            setCatName(c.name);
-                          }}
-                          className="p-1 hover:bg-slate-200 text-blue-600 rounded cursor-pointer"
-                        >
-                          <Edit2 size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteCategory(c._id)}
-                          className="p-1 hover:bg-slate-200 text-red-600 rounded cursor-pointer"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                      <div className="flex gap-1.5 items-center">
+                        {deletingCatId === c._id ? (
+                          <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 text-[10px]">
+                            <span className="font-bold text-rose-700">Delete?</span>
+                            <button
+                              type="button"
+                              onClick={() => deleteCategory(c._id)}
+                              className="font-bold text-rose-600 hover:text-rose-800"
+                            >
+                              Yes
+                            </button>
+                            <span className="text-slate-300">|</span>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingCatId(null)}
+                              className="font-semibold text-slate-500 hover:text-slate-700"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCatId(c._id);
+                                setCatName(c.name);
+                              }}
+                              className="p-1 hover:bg-slate-200 text-blue-600 rounded cursor-pointer"
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingCatId(c._id)}
+                              className="p-1 hover:bg-slate-200 text-red-600 rounded cursor-pointer"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
