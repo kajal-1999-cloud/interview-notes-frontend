@@ -518,7 +518,7 @@ export default function TopicPage() {
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex gap-8">
 
         {/* Left Sidebar: Questions Index (Desktop only) */}
-        <aside className="w-64 hidden lg:block shrink-0 sticky top-24 self-start max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
+        <aside className="w-80 hidden lg:block shrink-0 sticky top-24 self-start max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
           <div className="border border-slate-200 bg-white rounded-2xl p-5 shadow-xs">
             <h3 className="font-bold text-xs uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
               Questions Index
